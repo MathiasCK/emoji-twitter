@@ -8,7 +8,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ClerkProvider {...pageProps}>
-      <Component {...pageProps} />
+      <main className="flex h-screen justify-center">
+        <Component {...pageProps} />
+      </main>
     </ClerkProvider>
   );
 };
