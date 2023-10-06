@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Head from "next/head";
 import Image from "next/image";
+import { LoadingPage } from "~/components/ui";
 
 import { api } from "~/utils/api";
 import type { RouterOutputs } from "~/utils/api";
@@ -50,20 +51,34 @@ const PostView = (props: PostWithUser) => {
             post.createdAt,
           ).fromNow()}`}</span>
         </div>
-        <span className="">{post.content}</span>
+        <span className="text-2xl">{post.content}</span>
       </div>
     </div>
   );
 };
 
-export default function Home() {
-  const user = useUser();
-
+const Feed = () => {
   const { data, isLoading } = api.posts.getAll.useQuery();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <LoadingPage />;
 
   if (!data) return <div>Something went wrong...</div>;
+
+  return (
+    <div className="flex flex-col">
+      {data.map((postWithAuthor) => (
+        <PostView key={postWithAuthor.post.id} {...postWithAuthor} />
+      ))}
+    </div>
+  );
+};
+
+export default function Home() {
+  const { isLoaded, isSignedIn } = useUser();
+
+  api.posts.getAll.useQuery();
+
+  if (!isLoaded) return <div />;
 
   return (
     <>
@@ -75,7 +90,7 @@ export default function Home() {
 
       <div className="w-full border-x border-slate-400 md:max-w-2xl">
         <div className="flex border-b border-slate-400 p-4">
-          {!user.isSignedIn ? (
+          {!isSignedIn ? (
             <div className="flex justify-center">
               <SignInButton />
             </div>
@@ -85,11 +100,7 @@ export default function Home() {
             </>
           )}
         </div>
-        <div className="flex flex-col">
-          {data.map((postWithAuthor) => (
-            <PostView key={postWithAuthor.post.id} {...postWithAuthor} />
-          ))}
-        </div>
+        <Feed />
       </div>
     </>
   );
