@@ -8,6 +8,7 @@ import SuperJSON from "superjson";
 import Head from "next/head";
 import { Layout } from "~/components/ui";
 import Image from "next/image";
+import { ProfileFeed } from "~/components";
 
 const ProfileView: NextPage<{ username: string }> = ({ username }) => {
   const { data } = api.profile.getUserByUsername.useQuery({
@@ -17,25 +18,28 @@ const ProfileView: NextPage<{ username: string }> = ({ username }) => {
   if (!data) return <div>404</div>;
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>{data.username}</title>
       </Head>
-      <div className="relative h-36 bg-slate-600">
-        <Image
-          src={data.profileImageUrl}
-          alt={`${data.username ?? "unknown"}'s profile pic`}
-          width={128}
-          height={128}
-          className="absolute bottom-0 left-0 -mb-[64px] ml-4 rounded-full border-4 border-black bg-black"
-        />
-      </div>
-      <div className="h-[64px]"></div>
-      <div className="p-4 text-2xl font-bold">{`@${
-        data.username ?? "unknown"
-      }`}</div>
-      <div className="w-full border-b border-slate-400" />
-    </Layout>
+      <Layout>
+        <div className="relative h-36 bg-slate-600">
+          <Image
+            src={data.profileImageUrl}
+            alt={`${data.username ?? "unknown"}'s profile pic`}
+            width={128}
+            height={128}
+            className="absolute bottom-0 left-0 -mb-[64px] ml-4 rounded-full border-4 border-black bg-black"
+          />
+        </div>
+        <div className="h-[64px]"></div>
+        <div className="p-4 text-2xl font-bold">{`@${
+          data.username ?? "unknown"
+        }`}</div>
+        <div className="w-full border-b border-slate-400" />
+        <ProfileFeed userId={data.id} />
+      </Layout>
+    </>
   );
 };
 
