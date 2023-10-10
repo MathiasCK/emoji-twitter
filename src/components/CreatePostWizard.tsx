@@ -1,20 +1,28 @@
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "~/utils/api";
 import { Spinner } from "./ui";
+import { type SubmitHandler, useForm } from "react-hook-form";
+import { useState } from "react";
+
+type FormValues = {
+  post: string;
+};
 
 const CreatePostWizard = () => {
   const [input, setInput] = useState("");
+  const { register, handleSubmit, reset } = useForm<FormValues>();
   const { user } = useUser();
 
   const ctx = api.useContext();
 
+  if (!user) return null;
+
   const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
     onSuccess: () => {
-      setInput("");
       void ctx.posts.getAll.invalidate();
+      reset();
     },
     onError: (e) => {
       const errorMessage = e.data?.zodError?.fieldErrors.content;
@@ -28,10 +36,12 @@ const CreatePostWizard = () => {
     },
   });
 
-  if (!user) return null;
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
+    mutate({ content: data.post });
+  };
 
   return (
-    <div className="flex w-full gap-3">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex w-full gap-3">
       <Image
         src={user.profileImageUrl}
         alt="Profile image"
@@ -43,25 +53,23 @@ const CreatePostWizard = () => {
         placeholder="Type some emojis!"
         className="grow bg-transparent outline-none"
         type="text"
-        value={input}
+        {...register("post", { required: true })}
         onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && input !== "") {
+        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+          if (input !== "" && e.key === "Enter") {
             e.preventDefault();
-            mutate({ content: input });
+            onSubmit({ post: e.currentTarget.value });
           }
         }}
         disabled={isPosting}
       />
-      {input !== "" && !isPosting && (
-        <button onClick={() => mutate({ content: input })}>Post</button>
-      )}
+      {input !== "" && !isPosting && <button type="submit">Post</button>}
       {isPosting && (
         <div className="flex items-center justify-center">
           <Spinner size={20} />
         </div>
       )}
-    </div>
+    </form>
   );
 };
 
